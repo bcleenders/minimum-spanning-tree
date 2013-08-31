@@ -1,23 +1,35 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<math.h>
-#define maxVertices 1000
-#define maxEdges 1000000
-int graph[maxVertices][maxVertices];
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#define maxVertices 10000
+#define maxEdges 100000000
+
+double graph[maxVertices][maxVertices];
 /* Input graph must be undirected,weighted and connected*/
+typedef struct Verticle {
+    double xPos,yPos;
+}Verticle;
+Verticle V[maxVertices];
+
 typedef struct Edge {
-    int from,to,weight;
+    int from,to;
+    double weight;
 }Edge;
 int compare(const void * x,const void * y) {
-    return (*(Edge *)x).weight - (*(Edge *)y).weight;
+    if((*(Edge *)x).weight < (*(Edge *)y).weight)
+        return -1;
+    if((*(Edge *)x).weight > (*(Edge *)y).weight)
+        return 1;
+    return 0;
+    //return (*(Edge *)x).weight - (*(Edge *)y).weight;
 }
 Edge E[maxEdges];
 int parent[maxVertices];
 void init(int vertices) {
-    int iter=0;
-    for(iter=0;iter<vertices;iter++) {
-        parent[iter]=-1;
+    int i=0;
+    for(i=0;i<vertices;i++) {
+        parent[i]=-1;
     }
 
 }
@@ -36,18 +48,20 @@ void Kruskal(int vertices,int edges) {
     qsort(E,edges,sizeof(Edge),compare);
     /* Initialize parents of all vertices to be -1.*/
     init(vertices);
-    int totalEdges = 0,edgePos=0,from,to,weight;
+    int totalEdges = 0,edgePos=0,from,to;
+    double weight;
     Edge now;
     while(totalEdges < vertices -1) {
         if(edgePos==edges) {
             /* Input Graph is not connected*/
+            printf("Input graph is not connected");
             exit(0);
         }
         now = E[edgePos++];
         from = now.from;
         to = now.to;
         weight=now.weight;
-        /* See If vetices from,to are connected. If they are connected do not add this edge. */
+        /* See if vertices from,to are connected. If they are connected do not add this edge. */
         int parent1 = Find(from);
         int parent2 = Find(to);
         if(parent1!=parent2) {
@@ -57,26 +71,42 @@ void Kruskal(int vertices,int edges) {
         }
     }
 }
-int main() {
-    int vertices,edges;
-    scanf("%d%d",&vertices,&edges);
-    int iter,jter;
-    int from,to,weight;
-    for(iter=0;iter<edges;iter++) {
-        scanf("%d%d%d",&from,&to,&weight);
-        E[iter].from = from; 
-        E[iter].to = to; 
-        E[iter].weight = weight;
+int main{
+    int vertices;
+    scanf("%d",&vertices);
+
+    srand(time(NULL));
+
+    int i,j,k=0;
+    for(i=0;i<vertices;i++) {
+        V[i].xPos = ((double)rand()) / RAND_MAX;
+        V[i].yPos = ((double)rand()) / RAND_MAX;
+
+        //printf("(%f,%f)\n", V[i].xPos, V[i].yPos);
+
+        for(j=0;j<i;j++) {
+            E[k].from = i;
+            E[k].to = j;
+            E[k].weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
+            k++;
+        }
     }
+
+    //printf("\n\n");
+
     /* Finding MST */
-    Kruskal(vertices,edges);
+    Kruskal(vertices,k);
+
+    double mstLength = 0;
     /* Printing the MST */
-    for(iter=0;iter<vertices;iter++) {
-        for(jter=0;jter<vertices;jter++) {
-            if(graph[iter][jter]!=-1) {
-                printf("Vertex %d and %d, weight %d\n",iter,jter,graph[iter][jter]);
+    for(i=0;i<vertices;i++) {
+        for(j=0;j<vertices;j++) {
+            if(graph[i][j] > 0) {
+                //printf("Vertex %d and %d, weight %f\n",i,j,graph[i][j]);
+                mstLength += graph[i][j];
             }
         }
     }
+    printf("The total length of the MST is %f\n\n", mstLength);
     return 0;
 }
