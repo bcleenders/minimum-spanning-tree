@@ -71,18 +71,33 @@ void Kruskal(int vertices,int edges) {
         }
     }
 }
-int main{
-    int vertices;
-    scanf("%d",&vertices);
-
+int main(int argc, char *argv[]) {
+    // Seed the random function
     srand(time(NULL));
+    int vertices=0, i,j,k=0;
 
-    int i,j,k=0;
+
+    for(i = 1; i < argc; i++) {
+        if(strncmp(argv[i], "-test", 5) == 0) {
+            printf("test mode!\n");
+            exit(0);
+        }
+        else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) {
+            vertices = atoi(argv[i+1]);
+        }
+    }
+
+    // If no 
+    if(vertices <= 0) {
+        printf("Amount of vertices to create: ");
+        scanf("%d",&vertices);
+        printf("\n");
+    }
+
+
     for(i=0;i<vertices;i++) {
         V[i].xPos = ((double)rand()) / RAND_MAX;
         V[i].yPos = ((double)rand()) / RAND_MAX;
-
-        //printf("(%f,%f)\n", V[i].xPos, V[i].yPos);
 
         for(j=0;j<i;j++) {
             E[k].from = i;
@@ -92,7 +107,6 @@ int main{
         }
     }
 
-    //printf("\n\n");
 
     /* Finding MST */
     Kruskal(vertices,k);
