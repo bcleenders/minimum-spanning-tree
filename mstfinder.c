@@ -5,7 +5,7 @@
 #define maxVertices 10000
 #define maxEdges 100000000
 
-double graph[maxVertices][maxVertices];
+double mstLength = 0;
 /* Input graph must be undirected,weighted and connected*/
 typedef struct Verticle {
     double xPos,yPos;
@@ -43,7 +43,6 @@ int Union(int parent1,int parent2) {
         parent[parent1] = parent2;
 }
 void Kruskal(int vertices,int edges) {
-    memset(graph,-1,sizeof(graph)); /* -1 represents the absence of edge between them */
     /* Sort the edges according to the weight */
     qsort(E,edges,sizeof(Edge),compare);
     /* Initialize parents of all vertices to be -1.*/
@@ -65,7 +64,7 @@ void Kruskal(int vertices,int edges) {
         int parent1 = Find(from);
         int parent2 = Find(to);
         if(parent1!=parent2) {
-            graph[from][to] = weight;
+            mstLength += weight;
             Union(parent1,parent2);
             totalEdges++;
         }
@@ -111,16 +110,6 @@ int main(int argc, char *argv[]) {
     /* Finding MST */
     Kruskal(vertices,k);
 
-    double mstLength = 0;
-    /* Printing the MST */
-    for(i=0;i<vertices;i++) {
-        for(j=0;j<vertices;j++) {
-            if(graph[i][j] > 0) {
-                //printf("Vertex %d and %d, weight %f\n",i,j,graph[i][j]);
-                mstLength += graph[i][j];
-            }
-        }
-    }
     printf("The total length of the MST is %f\n\n", mstLength);
     return 0;
 }
