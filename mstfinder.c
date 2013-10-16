@@ -107,23 +107,22 @@ double genMST(int vertices, bool full_run) {
         printf("\n");
     }
 
+    double  a1 = sqrt(2),
+            a2 = sqrt(3);
 
     for(i=0;i<vertices;i++) {
-        V[i].xPos = ((double)rand()) / RAND_MAX;
-        V[i].yPos = ((double)rand()) / RAND_MAX;
+        V[i].xPos = (i*a1) - floor(i*a1); //((double)rand()) / RAND_MAX;
+        V[i].yPos = (i*a2) - floor(i*a2); //((double)rand()) / RAND_MAX;
+
 
         for(j=0;j<i;j++) {
-            double p = 0.50;
-
-            if(((double)rand()) > p){
-                double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
-                
-                if(full_run || weight < threshold) {
-                    E[k].from = i;
-                    E[k].to = j;
-                    E[k].weight = weight;
-                    k++;
-                }
+            double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
+            
+            if(full_run || weight < threshold) {
+                E[k].from = i;
+                E[k].to = j;
+                E[k].weight = weight;
+                k++;
             }
         }
     }
