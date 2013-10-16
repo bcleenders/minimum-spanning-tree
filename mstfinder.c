@@ -95,7 +95,7 @@ double Kruskal(int vertices,int edges) {
     }
 
     if(!silent) { printf("The longest edge is %f\n", maxWeight); }
-    else        { printf("max(|e|) = %f \t", maxWeight);         }
+    else        { printf("max(|e|) = %f   ", maxWeight);         }
 
     return mstLength;
 }
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     double mstLength = genMST(vertices, full_run);
     
     if(!silent) { printf("The total length of the MST is %f\n\n", mstLength); }
-    else        { printf("#V=%i \t L=%f\n", vertices, mstLength); }
+    else        { printf("#V=%i    L=%f\n", vertices, mstLength); }
     
     return 0;
 }
