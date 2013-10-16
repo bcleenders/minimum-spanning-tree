@@ -26,6 +26,8 @@ typedef struct Verticle {
 }Verticle;
 Verticle V[maxVertices];
 
+bool silent = false;
+
 typedef struct Edge {
     int from,to;
     double weight;
@@ -57,9 +59,9 @@ int Union(int parent1,int parent2) {
 
 double Kruskal(int vertices,int edges) {
     /* Sort the edges according to the weight */
-    printf("start qsort\n");
+    if(!silent) { printf("start qsort\n"); }
     qsort(E,edges,sizeof(Edge),compare);
-    printf("finished qsort\n");
+    if(!silent) { printf("finished qsort\n"); }
 
     /* Initialize parents of all vertices to be -1.*/
     init(vertices);
@@ -92,7 +94,8 @@ double Kruskal(int vertices,int edges) {
         iteration++;
     }
 
-    printf("The longest edge is %f\n", maxWeight);
+    if(!silent) { printf("The longest edge is %f\n", maxWeight); }
+    else        { printf("max(|e|) = %f \t", maxWeight);         }
 
     return mstLength;
 }
@@ -127,12 +130,12 @@ double genMST(int vertices, bool full_run) {
         }
     }
 
-    printf("There are %d edges used for this graph, of %llu possible edges (%.3g%%)\n\n", k*2, ((long) vertices*(vertices-1)), 100*((double)k*2/vertices/(vertices-1)) );
-
+    if(!silent) { printf("There are %d edges used for this graph, of %llu possible edges (%.3g%%)\n\n", k*2, ((long) vertices*(vertices-1)), 100*((double)k*2/vertices/(vertices-1)) ); }
 
     /* Finding MST */
     return Kruskal(vertices,k);
 }
+
 int main(int argc, char *argv[]) {
     // Seed the random function
     srand(time(NULL));
@@ -144,19 +147,18 @@ int main(int argc, char *argv[]) {
             printf("test mode!\n");
             exit(0);
         }
-        else if(strncmp(argv[i], "-fast", 5) == 0) {
-            printf("Running in fast mode; results can not be guaranteed to be correct.\n");
-            full_run = false;
-        }
-        else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) {
-            vertices = atoi(argv[i+1]);
-        }
+        else if(strncmp(argv[i], "-fast", 5)   == 0) { full_run = false; }
+        else if(strncmp(argv[i], "-silent", 7) == 0) { silent = true;   }
+        else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) { vertices = atoi(argv[i+1]); }
     }
 
-    printf("Reserved space for %d edges.\n", maxEdges);
+    if((!silent) && full_run) { printf("Running in fast mode; results can not be guaranteed to be correct.\n"); }
+    if(!silent)               { printf("Reserved space for %d edges.\n", maxEdges); }
 
     double mstLength = genMST(vertices, full_run);
-    printf("The total length of the MST is %f\n\n", mstLength);
+    
+    if(!silent) { printf("The total length of the MST is %f\n\n", mstLength); }
+    else        { printf("#V=%i \t L=%f\n", vertices, mstLength); }
     
     return 0;
 }
