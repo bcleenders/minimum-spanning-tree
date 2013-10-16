@@ -1,11 +1,25 @@
+/*
+Example run
+$ gcc mstfinder.c -lm && ./a.out -fast -v 75000
+Running in fast mode; results can not be guaranteed to be correct.
+Reserved space for 400000000 edges.
+There are 383592578 edges used for this graph, of 5624925000 possible edges (6.82%)
+ 
+start qsort
+finished qsort
+The total length of the MST is 0.508182
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#define maxVertices 10000
-#define maxEdges 100000000
+#include <stdbool.h>
+#define threshold 0.05
+#define maxVertices 80000
+/* experimentally, maxEdges should be at least: (threshold * maxVertices^2 * 4)
+   actually more like like PI, but to be on the safe side... */
+#define maxEdges (maxVertices * 1250 * 4)
 
-double mstLength = 0;
 /* Input graph must be undirected,weighted and connected*/
 typedef struct Verticle {
     double xPos,yPos;
@@ -17,15 +31,13 @@ typedef struct Edge {
     double weight;
 }Edge;
 int compare(const void * x,const void * y) {
-    if((*(Edge *)x).weight < (*(Edge *)y).weight)
-        return -1;
-    if((*(Edge *)x).weight > (*(Edge *)y).weight)
-        return 1;
+    if((*(Edge *)x).weight < (*(Edge *)y).weight) return -1;
+    if((*(Edge *)x).weight > (*(Edge *)y).weight) return 1;
     return 0;
-    //return (*(Edge *)x).weight - (*(Edge *)y).weight;
 }
-Edge E[maxEdges];
+Edge E[maxEdges]; // Educated guess of the max amount of edges
 int parent[maxVertices];
+
 void init(int vertices) {
     int i=0;
     for(i=0;i<vertices;i++) {
@@ -42,14 +54,20 @@ int Union(int parent1,int parent2) {
         /* This can be implemented in many other ways. This is one of them */
         parent[parent1] = parent2;
 }
-void Kruskal(int vertices,int edges) {
+
+double Kruskal(int vertices,int edges) {
     /* Sort the edges according to the weight */
+    printf("start qsort\n");
     qsort(E,edges,sizeof(Edge),compare);
+    printf("finished qsort\n");
+
     /* Initialize parents of all vertices to be -1.*/
     init(vertices);
     int totalEdges = 0,edgePos=0,from,to;
-    double weight;
+    double weight, mstLength = 0;
+    double maxWeight = 0;
     Edge now;
+    int iteration = 0;
     while(totalEdges < vertices -1) {
         if(edgePos==edges) {
             /* Input Graph is not connected*/
@@ -64,29 +82,25 @@ void Kruskal(int vertices,int edges) {
         int parent1 = Find(from);
         int parent2 = Find(to);
         if(parent1!=parent2) {
+            if(maxWeight < weight) {
+                maxWeight = weight;
+            }
             mstLength += weight;
             Union(parent1,parent2);
             totalEdges++;
         }
+        iteration++;
     }
+
+    printf("The longest edge is %f\n", maxWeight);
+
+    return mstLength;
 }
-int main(int argc, char *argv[]) {
-    // Seed the random function
-    srand(time(NULL));
-    int vertices=0, i,j,k=0;
 
-
-    for(i = 1; i < argc; i++) {
-        if(strncmp(argv[i], "-test", 5) == 0) {
-            printf("test mode!\n");
-            exit(0);
-        }
-        else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) {
-            vertices = atoi(argv[i+1]);
-        }
-    }
-
-    // If no 
+double genMST(int vertices, bool full_run) {
+    int i,j,k=0;
+    
+    // If no argument was supplied
     if(vertices <= 0) {
         printf("Amount of vertices to create: ");
         scanf("%d",&vertices);
@@ -99,17 +113,51 @@ int main(int argc, char *argv[]) {
         V[i].yPos = ((double)rand()) / RAND_MAX;
 
         for(j=0;j<i;j++) {
-            E[k].from = i;
-            E[k].to = j;
-            E[k].weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
-            k++;
+            double p = 0.50;
+
+            if(((double)rand()) > p){
+                double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
+                
+                if(full_run || weight < threshold) {
+                    E[k].from = i;
+                    E[k].to = j;
+                    E[k].weight = weight;
+                    k++;
+                }
+            }
         }
     }
 
+    printf("There are %d edges used for this graph, of %llu possible edges (%.3g%%)\n\n", k*2, ((long) vertices*(vertices-1)), 100*((double)k*2/vertices/(vertices-1)) );
+
 
     /* Finding MST */
-    Kruskal(vertices,k);
+    return Kruskal(vertices,k);
+}
+int main(int argc, char *argv[]) {
+    // Seed the random function
+    srand(time(NULL));
+    int i, vertices = 0;
+    bool full_run = true; // Whether or not to skip long edges
 
+    for(i = 1; i < argc; i++) {
+        if(strncmp(argv[i], "-test", 5) == 0) {
+            printf("test mode!\n");
+            exit(0);
+        }
+        else if(strncmp(argv[i], "-fast", 5) == 0) {
+            printf("Running in fast mode; results can not be guaranteed to be correct.\n");
+            full_run = false;
+        }
+        else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) {
+            vertices = atoi(argv[i+1]);
+        }
+    }
+
+    printf("Reserved space for %d edges.\n", maxEdges);
+
+    double mstLength = genMST(vertices, full_run);
     printf("The total length of the MST is %f\n\n", mstLength);
+    
     return 0;
 }
