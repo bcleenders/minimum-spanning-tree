@@ -27,6 +27,7 @@ typedef struct Verticle {
 Verticle V[maxVertices];
 
 bool silent = false;
+double chance = 0.5;
 
 typedef struct Edge {
     int from,to;
@@ -114,18 +115,18 @@ double genMST(int vertices, bool full_run) {
             a2 = sqrt(3);
 
     for(i=0;i<vertices;i++) {
-        V[i].xPos = (i*a1) - floor(i*a1); //((double)rand()) / RAND_MAX;
-        V[i].yPos = (i*a2) - floor(i*a2); //((double)rand()) / RAND_MAX;
+        if(((double)rand()) / RAND_MAX < chance) {
+            V[i].xPos = ((double)rand()) / RAND_MAX;
+            V[i].yPos = ((double)rand()) / RAND_MAX;
 
-
-        for(j=0;j<i;j++) {
-            double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
-            
-            if(full_run || weight < threshold) {
-                E[k].from = i;
-                E[k].to = j;
-                E[k].weight = weight;
-                k++;
+            for(j=0;j<i;j++) {
+                double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
+                if(weight > 0.075) {
+                    E[k].from = i;
+                    E[k].to = j;
+                    E[k].weight = weight;
+                    k++;
+                }
             }
         }
     }
@@ -150,6 +151,7 @@ int main(int argc, char *argv[]) {
         else if(strncmp(argv[i], "-fast", 5)   == 0) { full_run = false; }
         else if(strncmp(argv[i], "-silent", 7) == 0) { silent = true;   }
         else if(strncmp(argv[i], "-v", 2) == 0 && argc > (i+1)) { vertices = atoi(argv[i+1]); }
+        else if(strncmp(argv[i], "-p", 2) == 0 && argc > (i+1)) { chance   = atof(argv[i+1]); }
     }
 
     if((!silent) && full_run) { printf("Running in fast mode; results can not be guaranteed to be correct.\n"); }
