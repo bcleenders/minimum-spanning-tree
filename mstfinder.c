@@ -1,6 +1,11 @@
 /*
+To set the correct locations:
+$ LD_LIBRARY_PATH=/usr/local/lib
+$ export LD_LIBRARY_PATH
+
 Example run
-$ gcc mstfinder.c -lm && ./a.out -fast -v 75000
+$ gcc mstfinder.c -lgsl -lgslcblas -lm
+$./a.out -fast -v 75000
 Running in fast mode; results can not be guaranteed to be correct.
 Reserved space for 400000000 edges.
 There are 383592578 edges used for this graph, of 5624925000 possible edges (6.82%)
@@ -13,12 +18,17 @@ The total length of the MST is 0.508182
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <gsl/gsl_rng.h>
 #include <stdbool.h>
 #define threshold 0.05
 #define maxVertices 80000
 /* experimentally, maxEdges should be at least: (threshold * maxVertices^2 * 4)
    actually more like like PI, but to be on the safe side... */
 #define maxEdges (maxVertices * 1250 * 4)
+
+// To create the random
+const gsl_rng_type * T;
+gsl_rng * r;
 
 /* Input graph must be undirected,weighted and connected*/
 typedef struct Verticle {
@@ -111,17 +121,14 @@ double genMST(int vertices, bool full_run) {
         printf("\n");
     }
 
-    double  a1 = sqrt(2),
-            a2 = sqrt(3);
-
     for(i=0;i<vertices;i++) {
-        if(((double)rand()) / RAND_MAX < chance) {
-            V[i].xPos = ((double)rand()) / RAND_MAX;
-            V[i].yPos = ((double)rand()) / RAND_MAX;
+        V[i].xPos = ((double) gsl_rng_uniform(r));
+        V[i].yPos = ((double) gsl_rng_uniform(r));
 
-            for(j=0;j<i;j++) {
+        for(j=0;j<i;j++) {
+            if(((double)rand()) / RAND_MAX < chance) {
                 double weight = pow((V[i].xPos - V[j].xPos), 2.0) + pow((V[i].yPos - V[j].yPos), 2.0);
-                if(weight > 0.075) {
+                if(weight < threshold) {
                     E[k].from = i;
                     E[k].to = j;
                     E[k].weight = weight;
@@ -138,8 +145,12 @@ double genMST(int vertices, bool full_run) {
 }
 
 int main(int argc, char *argv[]) {
-    // Seed the random function
-    srand(time(NULL));
+    // Set up the random function
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc (T);
+    gsl_rng_set(r, time(NULL));
+
     int i, vertices = 0;
     bool full_run = true; // Whether or not to skip long edges
 
