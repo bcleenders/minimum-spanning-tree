@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
     gsl_rng_env_setup();
     T = gsl_rng_default;
     r = gsl_rng_alloc (T);
+    gsl_rng_set(r, time(NULL));
 
     int i, vertices = 0;
     bool full_run = true; // Whether or not to skip long edges
